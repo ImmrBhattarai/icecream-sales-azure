@@ -1,4 +1,4 @@
-# Ice Cream Sales Prediction with Azure Machine Learning
+# Ice Cream Sales Prediction with Azure Machine Learning | DIO Project
 
 Welcome to the Ice Cream Sales Prediction project! This portfolio project showcases how to leverage Azure Machine Learning (Azure ML) to build, track, and deploy a regression model. The model predicts daily ice cream sales based on the ambient temperature, enabling more efficient production planning and waste reduction.
  
@@ -26,29 +26,11 @@ Imagine you own Gelato Mágico on the coast. Optimizing ice cream production is 
 
 **Steps:**
 - Create an Azure ML Workspace: Either via the [Azure Portal](https://portal.azure.com/) or using the Python SDK.
-```python
-from azureml.core import Workspace
+![Screenshot From 2025-04-19 00-05-59](https://github.com/user-attachments/assets/4abd5a6d-f92a-49e0-8a2a-61a508b6f10d)
 
-# Load workspace details from the config.json file
-ws = Workspace.from_config()  
-print("Workspace loaded:", ws.name)
-```
-- **Provision a Compute Cluster:** Create a compute cluster that will be used for model training.
-```python
-from azureml.core.compute import ComputeTarget, AmlCompute
 
-compute_name = "cpu-cluster"
-compute_config = AmlCompute.provisioning_configuration(
-    vm_size='STANDARD_D2_V2', 
-    min_nodes=0, 
-    max_nodes=4
-)
-
-compute_target = ComputeTarget.create(ws, compute_name, compute_config)
-compute_target.wait_for_completion(show_output=True)
-print("Compute target created:", compute_target.name)
-```
-This foundational setup will support scalable computation and unified management of your experiments.
+- **Provision a Compute Instance/Cluster:** Create a compute cluster or instance that will be used for model training.
+![Screenshot From 2025-04-19 14-30-00](https://github.com/user-attachments/assets/0c6a9748-73c7-4493-8946-2157d70726f3)
 
 ## 2. Generate a Synthetic Dataset
 **Purpose:** Create a dataset that mimics realistic sales behavior based on ambient temperature.
@@ -59,6 +41,8 @@ This foundational setup will support scalable computation and unified management
 - **Ice Cream Sales (Units Sold):** Derived using a linear trend where higher temperatures yield more sales.
 
 **Download the dataset I used for this project**: [data.csv](https://github.com/user-attachments/files/19726173/data.csv)
+![image](https://github.com/user-attachments/assets/44d1b9f6-07a5-4ab5-a1c4-c7fc6a202dff)
+
 
 
 **Example Table Format:**
@@ -108,24 +92,7 @@ FileLink(file_name)
 **Purpose:** Provide a reproducible setup by specifying dependencies such as Scikit-learn, Pandas, NumPy, MLflow, and others.
 **Steps:**
 - **Create an Environment:** This encapsulates all Python dependencies.
-```python
-from azureml.core import Environment
-from azureml.core.conda_dependencies import CondaDependencies
 
-env = Environment("ice-cream-env")
-deps = CondaDependencies.create(
-    pip_packages=[
-        "scikit-learn", 
-        "pandas", 
-        "numpy",
-        "mlflow",
-        "azureml-sdk"
-    ]
-)
-env.python.conda_dependencies = deps
-env.register(ws)
-print("Environment registered.")
-```
 A well-defined environment ensures that your experiments are fully reproducible across different runs and by other team members.
 
 ## 4. Train the Regression Model with MLflow Logging
@@ -138,6 +105,13 @@ A well-defined environment ensures that your experiments are fully reproducible 
   - Calculate performance metrics (e.g., Mean Squared Error).
   - Log parameters, metrics, and the model artifact using MLflow.
   - Save the model to a designated path.
+
+![Screenshot From 2025-04-19 17-09-11](https://github.com/user-attachments/assets/7dcaa1c8-f7b5-4270-80ea-303c51b88041)
+![Screenshot From 2025-04-19 17-07-54](https://github.com/user-attachments/assets/ca0c1c55-0676-443f-b263-9858ead9f40f)
+![Screenshot From 2025-04-19 17-07-40](https://github.com/user-attachments/assets/f1c30dbc-3015-47dc-819c-c26c534155d1)
+![Screenshot From 2025-04-19 17-06-41](https://github.com/user-attachments/assets/3acde2dd-9804-4ebb-9afb-20496c473e51)
+
+
 ```python
 import os
 import pandas as pd
@@ -191,58 +165,19 @@ This script forms the core of your experiment and takes advantage of MLflow to m
 **Purpose:** Package your training script for execution on the compute cluster managed by Azure ML.
 
 **Submit the Experiment:**
-```python
-from azureml.core import ScriptRunConfig, Experiment
 
-src = ScriptRunConfig(
-    source_directory="./scripts", 
-    script="train.py", 
-    compute_target=compute_target, 
-    environment=env
-)
-
-experiment = Experiment(ws, "IceCreamSales")
-run = experiment.submit(src)
-run.wait_for_completion(show_output=True)
-print("Run completed.")
-```
 This integration brings all the components together, enabling you to track experiments and iterate on your model efficiently.
 
 ## 6. Register and Deploy the Model for Real-Time Inference
 **Register the Model**
 **Purpose:** Capture the trained model version for future deployment and tracking.
-```python
-from azureml.core.model import Model
+![Screenshot From 2025-04-19 16-12-20](https://github.com/user-attachments/assets/84a0c5e5-c241-47e4-a16e-2b19debf0b4b)
 
-model = Model.register(
-    workspace=ws,
-    model_path='outputs/model.pkl',
-    model_name='icecream_sales_regression'
-)
-print("Model registered:", model.name)
-```
+
 **Create a Scoring Script (score.py)**
 This script accepts HTTP requests with new temperature data, loads the model, and returns sales predictions.
-```python
-import json
-import joblib
-import numpy as np
-from azureml.core.model import Model
 
-def init():
-    global model
-    model_path = Model.get_model_path('icecream_sales_regression')
-    model = joblib.load(model_path)
-
-def run(raw_data):
-    try:
-        data = json.loads(raw_data)
-        temperature = data["Temperature"]
-        prediction = model.predict(np.array([[temperature]]))
-        return json.dumps({"IceCreamSalesPrediction": prediction[0]})
-    except Exception as e:
-        return json.dumps({"error": str(e)})
-```
+[Optional]
 **Deploy the Model using Azure Container Instances (ACI)**
 
 **Purpose:** Create a deployment configuration for scalable, real-time predictions.
@@ -272,9 +207,23 @@ print("Service deployed at:", service.scoring_uri)
 ```
 This step exposes your model as a web service that can be consumed via HTTP requests, completing the pipeline from training to deployment.
 
+##  Pipeline Creation and Training
+![Screenshot From 2025-04-19 15-59-38](https://github.com/user-attachments/assets/89a4ef32-3ccd-4354-a7a5-686a20eda873)
+![Screenshot From 2025-04-19 15-58-06](https://github.com/user-attachments/assets/2d885c37-dd8a-473c-bc91-5d18e3093178)
+![Screenshot From 2025-04-19 14-38-40](https://github.com/user-attachments/assets/c16b4372-cf5e-4961-88d6-894c762a856c)
+![Screenshot From 2025-04-19 14-30-25](https://github.com/user-attachments/assets/88044444-25f0-4a88-96fa-f04017c1b48e)
+![Screenshot From 2025-04-19 14-30-11](https://github.com/user-attachments/assets/add58fec-5048-4116-9522-c739505bd16b)
+![Screenshot From 2025-04-19 14-30-00](https://github.com/user-attachments/assets/a45ecaff-0b42-4ee1-999c-7df1c08ccf9f)
+![Screenshot From 2025-04-19 14-28-18](https://github.com/user-attachments/assets/565f8ac6-46d1-4b63-ad18-5bc1f7dbf17a)
+![Screenshot From 2025-04-19 14-27-11](https://github.com/user-attachments/assets/6f07e806-e962-45cd-8428-bf722c6b44cc)
+![Screenshot From 2025-04-19 14-24-27](https://github.com/user-attachments/assets/c1649ef6-7736-4cdb-ace1-043739c348da)
+![Screenshot From 2025-04-19 14-18-29](https://github.com/user-attachments/assets/aff5cbb5-1591-4744-9cdd-973e7e040362)
+![Screenshot From 2025-04-19 14-17-22](https://github.com/user-attachments/assets/b4109a01-2867-4c8b-b3ea-3f11d447be20)
+
+
 ---
 What I was able to learn completing this project:
-✅ Train a Machine Learning model to predict ice cream sales based on the temperature of the day.
-✅ Register and manage the model using MLflow.
-✅ Implement the model for real-time predictions in a cloud computing environment.
-✅ Create a structured pipeline to train and test the model, ensuring reproducibility. 
+- ✅ Train a Machine Learning model to predict ice cream sales based on the temperature of the day.
+- ✅ Register and manage the model using MLflow.
+- ✅ Implement the model for real-time predictions in a cloud computing environment.
+- ✅ Create a structured pipeline to train and test the model, ensuring reproducibility. 
