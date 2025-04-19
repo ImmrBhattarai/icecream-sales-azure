@@ -273,11 +273,8 @@ print("Service deployed at:", service.scoring_uri)
 This step exposes your model as a web service that can be consumed via HTTP requests, completing the pipeline from training to deployment.
 
 ---
-
-## 📖 How to Run This Project
-1. **Clone the Repository:** Download the project to your local machine or cloud environment.
-2. **Configure Your Azure ML Workspace:** Update the config.json with your workspace details and run the setup scripts.
-3. **Generate and Inspect Data:** Verify the synthetic dataset generation within the inputs/ directory.
-4. **Run Training:** Execute train.py to train and log the regression model using MLflow.
-5. **Deploy for Real-Time Predictions:** Use the provided scripts to register and deploy your model via ACI.
-6. **Document and Iterate:** Use screenshots, notes, and experiment logs stored in MLflow and Azure ML to refine and share your work.
+What I was able to learn completing this project:
+✅ Train a Machine Learning model to predict ice cream sales based on the temperature of the day.
+✅ Register and manage the model using MLflow.
+✅ Implement the model for real-time predictions in a cloud computing environment.
+✅ Create a structured pipeline to train and test the model, ensuring reproducibility. 
