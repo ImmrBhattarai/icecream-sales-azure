@@ -13,12 +13,12 @@ data_path = 'dataset.csv'
 data = pd.read_csv(data_path)
 
 # Check if the necessary columns are present
-if not all(col in data.columns for col in ['Date', 'Temperature', 'IceCreamSales']):
-    raise ValueError("The dataset must contain 'Date', 'Temperature', and 'IceCreamSales' columns.")
+if not all(col in data.columns for col in ['Date', 'Temperature', 'Ice Cream Sales']):
+    raise ValueError("The dataset must contain 'Date', 'Temperature', and 'Ice Cream Sales' columns.")
 
 # Prepare the features and target variable
 X = data[['Temperature']]
-y = data['IceCreamSales']
+y = data['Ice Cream Sales']
 
 # Create and train the model
 model = LinearRegression()
